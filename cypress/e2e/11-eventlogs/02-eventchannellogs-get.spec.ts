@@ -8,14 +8,22 @@ describe('Test eventchannellogs', () => {
     cy.setup()
   })
 
-  // it('check default values', () => {
-  //   cy.goToPage('MQTT Events')
-  //   cy.get('input[name="hostname"]').invoke('val').should('eq', 'localhost')
-  //   cy.get('input[name="path"]').invoke('val').should('eq', '/mosquitto/mqtt')
-  // })
+  it.skip('check default values - MQTT Events feature disabled', () => {
+    // This test is skipped because:
+    // 1. The navigation link for 'MQTT Events' is commented out in navbar.component.html
+    // 2. The /event-channel route returns 404
+    // The MQTT Events feature appears to be disabled
+    cy.visit('/event-channel')
+    cy.get('input[name="hostname"]').invoke('val').should('eq', 'localhost')
+    cy.get('input[name="path"]').invoke('val').should('eq', '/mosquitto/mqtt')
+  })
 
-  // it('load all the eventchannelogs', () => {
-  //   cy.goToPage('MQTT Events')
-  //   cy.get('h3').should('have.text', 'No Events')
-  // })
+  it.skip('load all the eventchannelogs - MQTT Events feature disabled', () => {
+    // This test is skipped because:
+    // 1. The navigation link for 'MQTT Events' is commented out in navbar.component.html
+    // 2. The /event-channel route returns 404
+    // The MQTT Events feature appears to be disabled
+    cy.visit('/event-channel')
+    cy.get('h3').should('have.text', 'No Events')
+  })
 })
