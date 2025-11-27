@@ -3,17 +3,45 @@
  * SPDX-License-Identifier: Apache-2.0
  **********************************************************************/
 
+import { httpCodes } from 'cypress/e2e/fixtures/api/httpCodes'
+import { profiles } from 'cypress/e2e/fixtures/api/profile'
+import { ciraConfig } from 'cypress/e2e/fixtures/api/cira'
+import { wirelessConfigs } from 'cypress/e2e/fixtures/api/wireless'
+import { wiredConfigsResponse } from 'cypress/e2e/fixtures/api/ieee8021x'
+
 describe('Test Profile Delete', () => {
   beforeEach(() => {
     cy.setup()
     
-    // Setup intercepts for real API calls
-    cy.intercept('GET', '**/profiles*').as('get-profiles')
-    cy.intercept('GET', '**/ciraconfigs*').as('get-configs')
-    cy.intercept('GET', '**/wirelessconfigs*').as('get-wireless')
-    cy.intercept('GET', '**/ieee8021xconfigs*').as('get-8021x')
-    cy.intercept('DELETE', '**/profiles/**').as('delete-profile')
-    cy.intercept('POST', '**/profiles').as('post-profile')
+    // Setup intercepts with proper mock data for ISOLATE mode
+    cy.myIntercept('GET', '**/profiles*', {
+      statusCode: httpCodes.SUCCESS,
+      body: profiles.getAll.success.response
+    }).as('get-profiles')
+    
+    cy.myIntercept('GET', '**/ciraconfigs*', {
+      statusCode: httpCodes.SUCCESS,
+      body: ciraConfig.getAll.success.response
+    }).as('get-configs')
+    
+    cy.myIntercept('GET', '**/wirelessconfigs*', {
+      statusCode: httpCodes.SUCCESS,
+      body: wirelessConfigs.getAll.success.response
+    }).as('get-wireless')
+    
+    cy.myIntercept('GET', '**/ieee8021xconfigs*', {
+      statusCode: httpCodes.SUCCESS,
+      body: wiredConfigsResponse
+    }).as('get-8021x')
+    
+    cy.myIntercept('DELETE', '**/profiles/**', {
+      statusCode: httpCodes.NO_CONTENT
+    }).as('delete-profile')
+    
+    cy.myIntercept('POST', '**/profiles', {
+      statusCode: httpCodes.CREATED,
+      body: profiles.create.success.response
+    }).as('post-profile')
   })
 
   it('should delete a profile successfully', () => {

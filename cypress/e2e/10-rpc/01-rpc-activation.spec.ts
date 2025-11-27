@@ -124,7 +124,7 @@ if (Cypress.env('ISOLATE').charAt(0).toLowerCase() !== 'y') {
         }
         cy.wait(120000)
 
-        cy.intercept(/devices\/.*$/).as('getdevices')
+        cy.myIntercept('GET', /devices\/.*$/, {}).as('getdevices')
         // run device tests
         cy.goToPage('Devices')
         cy.wait('@getdevices')

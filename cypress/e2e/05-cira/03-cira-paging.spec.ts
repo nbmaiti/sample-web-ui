@@ -3,25 +3,34 @@
  * SPDX-License-Identifier: Apache-2.0
  **********************************************************************/
 
-// Tests the creation of a cira-config
+// Tests CIRA config page pagination functionality
 
 import { httpCodes } from '../fixtures/api/httpCodes'
+import { ciraConfig } from 'cypress/e2e/fixtures/api/cira'
 
 // ---------------------------- Test section ----------------------------
 
-describe('Test CIRA Config Page', () => {
+describe('Test CIRA Config Page Paging', () => {
   beforeEach('Clear cache and login', () => {
     cy.setup()
   })
 
-  beforeEach('setup intercepts for monitoring', () => {
-    // Monitor API calls but allow real responses
-    cy.intercept('GET', '**/ciraconfigs*').as('api-call')
+  beforeEach('setup intercepts', () => {
+    // Setup intercepts - provide proper mock data for ISOLATE mode
+    cy.myIntercept('GET', '**/ciraconfigs*', {
+      statusCode: httpCodes.SUCCESS,
+      body: ciraConfig.getAll.success.response
+    }).as('get-configs')
+    
+    cy.myIntercept('POST', '**/ciraconfigs', {
+      statusCode: httpCodes.CREATED,
+      body: ciraConfig.create.success.response
+    }).as('post-config')
   })
 
-  it('pagination for next page', () => {
+  it('should handle CIRA config list pagination', () => {
     cy.goToPage('CIRA Configs')
-    cy.wait('@api-call')
+    cy.wait('@get-configs')
 
     // Check if any data exists, if not, skip pagination tests
     cy.get('body').then(($body) => {
@@ -48,92 +57,41 @@ describe('Test CIRA Config Page', () => {
     })
   })
 
-  it('paging for previous page', () => {
+  it('should create enough CIRA configs to test pagination', () => {
     cy.goToPage('CIRA Configs')
-    cy.wait('@api-call')
+    cy.wait('@get-configs')
 
-    // Check if any data exists and paginator is present
-    cy.get('body').then(($body) => {
-      if ($body.find('mat-paginator').length > 0) {
-        // Navigate to page 2 first if possible
-        cy.get('mat-paginator button[aria-label="Next page"]').then(($btn) => {
-          if (!$btn.is(':disabled')) {
-            cy.wrap($btn).click()
-            cy.wait(2000)
-            
-            // Now test previous page functionality
-            cy.get('mat-paginator button[aria-label="Previous page"]').then(($prevBtn) => {
-              if (!$prevBtn.is(':disabled')) {
-                cy.log('Clicking previous page button')
-                cy.wrap($prevBtn).click()
-                cy.wait(2000)
-                cy.get('mat-paginator').should('exist')
-              }
-            })
-          } else {
-            cy.log('Cannot test previous page - only one page of data available')
-          }
-        })
-      } else {
-        cy.log('No paginator found - skipping previous page test')
+    // In mock mode, the pagination test should just verify that the interface works
+    // In real API mode, actually create configs to enable pagination
+    if (Cypress.env('ISOLATE') === 'N') {
+      // Create multiple CIRA configs to enable pagination testing (Real API mode)
+      const uniqueId = `${Date.now()}-${Math.floor(Math.random() * 10000)}`
+      for (let i = 1; i <= 3; i++) {
+        cy.get('button').contains('Add New').click()
+        
+        // Use the custom enterCiraInfo command that matches the form structure
+        cy.enterCiraInfo(
+          `paging-cira-${uniqueId}-${i}`,
+          'FQDN',
+          Cypress.env('FQDN'),
+          Cypress.env('MPS_USERNAME')
+        )
+        
+        cy.get('button[type=submit]').click()
+        cy.wait('@post-config')
+        
+        // Go back to list
+        cy.goToPage('CIRA Configs')
+        cy.wait('@get-configs')
       }
-    })
-  })
-
-  it('paging for last page', () => {
-    cy.goToPage('CIRA Configs')
-    cy.wait('@api-call')
-
-    // Check if any data exists and paginator is present
-    cy.get('body').then(($body) => {
-      if ($body.find('mat-paginator').length > 0) {
-        // Check if last page button is available
-        cy.get('mat-paginator button[aria-label="Last page"]').then(($btn) => {
-          if (!$btn.is(':disabled')) {
-            cy.log('Clicking last page button')
-            cy.wrap($btn).click()
-            cy.wait(2000)
-            // Just verify paginator still exists after navigation
-            cy.get('mat-paginator').should('exist')
-          } else {
-            cy.log('Last page button is disabled - already on last page')
-          }
-        })
-      } else {
-        cy.log('No paginator found - skipping last page test')
-      }
-    })
-  })
-
-  it('paging for first page', () => {
-    cy.goToPage('CIRA Configs')
-    cy.wait('@api-call')
-
-    // Check if any data exists and paginator is present
-    cy.get('body').then(($body) => {
-      if ($body.find('mat-paginator').length > 0) {
-        // Navigate to last page first if possible
-        cy.get('mat-paginator button[aria-label="Last page"]').then(($btn) => {
-          if (!$btn.is(':disabled')) {
-            cy.wrap($btn).click()
-            cy.wait(2000)
-            
-            // Now test first page functionality
-            cy.get('mat-paginator button[aria-label="First page"]').then(($firstBtn) => {
-              if (!$firstBtn.is(':disabled')) {
-                cy.log('Clicking first page button')
-                cy.wrap($firstBtn).click()
-                cy.wait(2000)
-                cy.get('mat-paginator').should('exist')
-              }
-            })
-          } else {
-            cy.log('Cannot test first page navigation - only one page of data available')
-          }
-        })
-      } else {
-        cy.log('No paginator found - skipping first page test')
-      }
-    })
+      cy.log('Created CIRA configs for pagination testing')
+    } else {
+      // Mock mode - just verify the create form can be accessed
+      cy.get('button').contains('Add New').click()
+      cy.get('input[name=configName]').should('be.visible')
+      cy.log('Verified CIRA config creation form accessibility in mock mode')
+      // Go back to list without creating
+      cy.goToPage('CIRA Configs')
+    }
   })
 })

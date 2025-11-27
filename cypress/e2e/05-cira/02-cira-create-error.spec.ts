@@ -24,12 +24,12 @@ describe('Test CIRA Config Page', () => {
       body: ciraFixtures.MpsCertificate
     }).as('certificate1')
 
-    cy.intercept('POST', 'ciraconfigs', {
+    cy.myIntercept('POST', 'ciraconfigs', {
       statusCode: httpCodes.BAD_REQUEST,
       body: badRequest.response
     }).as('post-config1')
 
-    cy.intercept('GET', 'ciraconfigs?$top=25&$skip=0&$count=true', {
+    cy.myIntercept('GET', 'ciraconfigs?$top=25&$skip=0&$count=true', {
       statusCode: httpCodes.SUCCESS,
       body: empty.response
     }).as('get-configs')
