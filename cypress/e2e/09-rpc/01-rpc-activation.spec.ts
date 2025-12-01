@@ -260,7 +260,7 @@ if (Cypress.env('ISOLATE').charAt(0).toLowerCase() !== 'y') {
         let activateCommand: string
         if (useRemoteSSH) {
           const device = getEnabledDevices().find((d: any) => d.name === deviceName)
-          activateCommand = buildSSHCommand(`/tmp/rpc_linux_x64 activate -u wss://${fqdn}/activate -v -n --profile ${profileName} -json`, device)
+          activateCommand = buildSSHCommand(`/tmp/rpc_linux_x64 activate -u wss://${fqdn}/activate -v -n --profile ${profileName} -json -d vprodemo.com`, device)
           cy.log(`Activation SSH command for ${deviceName}: ${activateCommand}`)
           cy.task('log', `[SPEC LOG] Activation Command: ${activateCommand}`)
         } else {
